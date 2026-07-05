@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
@@ -16,14 +17,31 @@ class DashboardController extends Controller
 {
     public function stats(): JsonResponse
     {
-        $today      = now()->toDateString();
-        $thisMonth  = now()->format('Y-m');
-        $lastMonth  = now()->subMonth()->format('Y-m');
+        $today = now()->toDateString();
+
+        // Menggunakan properti year dan month dari Carbon agar kompatibel dengan semua Database
+        $thisYear  = now()->year;
+        $thisMonth = now()->month;
+
+        $lastYear  = now()->subMonth()->year;
+        $lastMonth = now()->subMonth()->month;
 
         // Total pendapatan hari ini
-        $todaySales   = SaleTransaction::whereDate('created_at', $today)->where('payment_status', 'paid')->sum('total_amount');
-        $monthSales   = SaleTransaction::where(DB::raw("DATE_FORMAT(created_at,'%Y-%m')"), $thisMonth)->where('payment_status', 'paid')->sum('total_amount');
-        $lastMonSales = SaleTransaction::where(DB::raw("DATE_FORMAT(created_at,'%Y-%m')"), $lastMonth)->where('payment_status', 'paid')->sum('total_amount');
+        $todaySales = SaleTransaction::whereDate('created_at', $today)
+            ->where('payment_status', 'paid')
+            ->sum('total_amount');
+
+        // Pendapatan bulan ini menggunakan whereYear dan whereMonth
+        $monthSales = SaleTransaction::whereYear('created_at', $thisYear)
+            ->whereMonth('created_at', $thisMonth)
+            ->where('payment_status', 'paid')
+            ->sum('total_amount');
+
+        // Pendapatan bulan lalu
+        $lastMonSales = SaleTransaction::whereYear('created_at', $lastYear)
+            ->whereMonth('created_at', $lastMonth)
+            ->where('payment_status', 'paid')
+            ->sum('total_amount');
 
         $growthPct = $lastMonSales > 0 ? round((($monthSales - $lastMonSales) / $lastMonSales) * 100, 1) : 0;
 
@@ -36,7 +54,7 @@ class DashboardController extends Controller
                 'total_users'       => User::count(),
                 'low_stock_count'   => Product::lowStock()->count(),
                 'today_sales'       => $todaySales,
-                'today_transactions'=> SaleTransaction::whereDate('created_at', $today)->count(),
+                'today_transactions' => SaleTransaction::whereDate('created_at', $today)->count(),
                 'month_sales'       => $monthSales,
                 'last_month_sales'  => $lastMonSales,
                 'growth_percent'    => $growthPct,
@@ -49,18 +67,27 @@ class DashboardController extends Controller
     {
         $type = $request->type ?? 'daily'; // daily | monthly
 
+        // Cek driver database yang sedang digunakan (mysql / pgsql)
+        $driver = DB::connection()->getDriverName();
+
         if ($type === 'monthly') {
+            // Sesuaikan format tanggal berdasarkan driver database
+            $monthFormat = $driver === 'pgsql' ? "TO_CHAR(created_at, 'YYYY-MM')" : "DATE_FORMAT(created_at, '%Y-%m')";
+
             $data = SaleTransaction::where('payment_status', 'paid')
                 ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
-                ->groupBy('month')
-                ->selectRaw("DATE_FORMAT(created_at,'%Y-%m') as month, SUM(total_amount) as total, COUNT(*) as count")
+                ->groupByRaw($monthFormat)
+                ->selectRaw("{$monthFormat} as month, SUM(total_amount) as total, COUNT(*) as count")
                 ->orderBy('month')
                 ->get();
         } else {
+            // Sesuaikan format tanggal harian
+            $dateFormat = $driver === 'pgsql' ? "TO_CHAR(created_at, 'YYYY-MM-DD')" : "DATE(created_at)";
+
             $data = SaleTransaction::where('payment_status', 'paid')
                 ->where('created_at', '>=', now()->subDays(29))
-                ->groupBy('date')
-                ->selectRaw("DATE(created_at) as date, SUM(total_amount) as total, COUNT(*) as count")
+                ->groupByRaw($dateFormat)
+                ->selectRaw("{$dateFormat} as date, SUM(total_amount) as total, COUNT(*) as count")
                 ->orderBy('date')
                 ->get();
         }
