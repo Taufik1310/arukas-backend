@@ -12,6 +12,7 @@ use App\Http\Controllers\API\SaleTransactionController;
 use App\Http\Controllers\API\SupplierController;
 use App\Http\Controllers\API\UserController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 
 /*
 |--------------------------------------------------------------------------
@@ -79,4 +80,24 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::apiResource('users', UserController::class);
     });
+});
+
+Route::get('/setup-database', function () {
+    try {
+        // Menjalankan migrasi
+        Artisan::call('migrate', ['--force' => true]);
+
+        // (Opsional) Jika Anda punya data seeder/dummy, hapus tanda // di bawah ini:
+        // Artisan::call('db:seed', ['--force' => true]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Database berhasil dimigrasi!'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
 });
