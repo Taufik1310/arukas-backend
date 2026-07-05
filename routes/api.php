@@ -82,23 +82,29 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 
+use Illuminate\Support\Facades\Artisan;
+
 Route::get('/setup-database', function () {
     try {
-        // Ini akan mereset total database dan menjalankan semua seeder
-        Artisan::call('migrate:fresh', [
+        // Jalankan perintah
+        $exitCode = Artisan::call('migrate:fresh', [
             '--force' => true,
             '--seed' => true
         ]);
 
+        // TANGKAP LOG TERMINAL ASLI
+        $output = Artisan::output();
+
         return response()->json([
-            'status' => 'success',
-            'message' => 'Semua Seeder berhasil dijalankan!'
+            'status' => $exitCode === 0 ? 'success' : 'terjadi_masalah',
+            'exit_code' => $exitCode,
+            'terminal_output' => $output // Ini yang akan membongkar letak errornya!
         ]);
     } catch (\Exception $e) {
-        // JIKA ADA SEEDER YANG GAGAL, ERROR-NYA AKAN MUNCUL DI SINI
         return response()->json([
             'status' => 'error',
-            'message' => $e->getMessage()
+            'message' => $e->getMessage(),
+            'terminal_output' => Artisan::output()
         ]);
     }
 });
