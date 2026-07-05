@@ -1,5 +1,5 @@
 # Menggunakan image resmi PHP 8.3
-FROM php:8.3-apache
+FROM php:8.4-apache
 
 # 1. Install dependencies sistem, Node.js (Vite), dan ekstensi PHP
 RUN apt-get update && apt-get install -y \
