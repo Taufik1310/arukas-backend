@@ -35,7 +35,7 @@ COPY . /var/www/html
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # 6. Install dependencies backend (PHP/Laravel)
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --optimize-autoloader
 
 # 7. Install dependencies frontend (NPM) dan jalankan Vite Build
 RUN npm install
