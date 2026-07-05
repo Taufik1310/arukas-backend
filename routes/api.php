@@ -87,8 +87,8 @@ Route::get('/setup-database', function () {
         // Menjalankan migrasi
         Artisan::call('migrate', ['--force' => true]);
 
-        // (Opsional) Jika Anda punya data seeder/dummy, hapus tanda // di bawah ini:
-        // Artisan::call('db:seed', ['--force' => true]);
+
+        Artisan::call('db:seed', ['--force' => true]);
 
         return response()->json([
             'status' => 'success',
