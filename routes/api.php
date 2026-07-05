@@ -82,8 +82,6 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 
-use Illuminate\Support\Facades\Artisan;
-
 Route::get('/setup-database', function () {
     try {
         // Jalankan perintah
