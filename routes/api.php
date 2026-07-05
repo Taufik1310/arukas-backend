@@ -84,17 +84,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::get('/setup-database', function () {
     try {
-        // Menjalankan migrasi
-        Artisan::call('migrate', ['--force' => true]);
-
-
-        Artisan::call('db:seed', ['--force' => true]);
+        // Ini akan mereset total database dan menjalankan semua seeder
+        Artisan::call('migrate:fresh', [
+            '--force' => true,
+            '--seed' => true
+        ]);
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Database berhasil dimigrasi!'
+            'message' => 'Semua Seeder berhasil dijalankan!'
         ]);
     } catch (\Exception $e) {
+        // JIKA ADA SEEDER YANG GAGAL, ERROR-NYA AKAN MUNCUL DI SINI
         return response()->json([
             'status' => 'error',
             'message' => $e->getMessage()
