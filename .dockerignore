@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+
+# Environment variables (Sangat penting agar kredensial lokal tidak bocor)
+.env
+.env.example
+.env.backup
+
+# Dependencies (Akan diinstal ulang di dalam container)
+/vendor
+/node_modules
+npm-debug.log
+yarn-error.log
+
+# Build & Compiled files
+/public/build
+/public/hot
+/public/storage
+
+# Storage & Cache (Mencegah log dan cache lokal terbawa ke server)
+/storage/*.key
+/storage/logs/*.log
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/bootstrap/cache/*
+
+# Testing & Development files
+/tests
+phpunit.xml
+phpunit.result.cache
+/docs
+README.md
+
+# OS specific files
+.DS_Store
+Thumbs.db
